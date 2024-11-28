@@ -51,7 +51,7 @@ public final class SelectorMapperTest extends AbstractSpringIntegrationTest {
         int insert = selectorMapper.insert(selectorDO);
         assertEquals(1, insert);
 
-        SelectorDO selector = selectorMapper.selectByIdAndNamespaceId(selectorDO.getId(), SYS_DEFAULT_NAMESPACE_ID);
+        SelectorDO selector = selectorMapper.selectById(selectorDO.getId());
         assertNotNull(selector);
         assertEquals(selectorDO.getId(), selector.getId());
         assertEquals(selectorDO.getContinued(), selector.getContinued());
@@ -84,7 +84,7 @@ public final class SelectorMapperTest extends AbstractSpringIntegrationTest {
         int insert = selectorMapper.insert(selectorDO);
         assertEquals(1, insert);
 
-        SelectorQuery query = new SelectorQuery(selectorDO.getPluginId(), selectorDO.getName(), new PageParameter());
+        SelectorQuery query = new SelectorQuery(selectorDO.getPluginId(), selectorDO.getName(), new PageParameter(), SYS_DEFAULT_NAMESPACE_ID);
         List<SelectorDO> list = selectorMapper.selectByQuery(query);
         assertNotNull(list);
         assertEquals(list.size(), 1);
@@ -129,7 +129,7 @@ public final class SelectorMapperTest extends AbstractSpringIntegrationTest {
         int insert = selectorMapper.insert(selectorDO);
         assertEquals(1, insert);
 
-        SelectorQuery query = new SelectorQuery(selectorDO.getPluginId(), selectorDO.getName(), new PageParameter());
+        SelectorQuery query = new SelectorQuery(selectorDO.getPluginId(), selectorDO.getName(), new PageParameter(), SYS_DEFAULT_NAMESPACE_ID);
         Integer count = selectorMapper.countByQuery(query);
         assertNotNull(count);
         assertEquals(Integer.valueOf(1), count);

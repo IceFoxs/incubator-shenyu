@@ -143,8 +143,16 @@ public class MetaDataServiceImpl implements MetaDataService {
     }
 
     @Override
-    public MetaDataVO findByIdAndNamespaceId(final String id, final String namespaceId) {
-        return Optional.ofNullable(MetaDataTransfer.INSTANCE.mapToVO(metaDataMapper.selectByIdAndNamespaceId(id, namespaceId))).orElseGet(MetaDataVO::new);
+    public void syncDataByNamespaceId(final String namespaceId) {
+        List<MetaDataDO> all = metaDataMapper.findAllByNamespaceId(namespaceId);
+        if (CollectionUtils.isNotEmpty(all)) {
+            eventPublisher.publishEvent(new DataChangedEvent(ConfigGroupEnum.META_DATA, DataEventTypeEnum.REFRESH, MetaDataTransfer.INSTANCE.mapToDataAll(all)));
+        }
+    }
+
+    @Override
+    public MetaDataVO findById(final String id) {
+        return Optional.ofNullable(MetaDataTransfer.INSTANCE.mapToVO(metaDataMapper.selectById(id))).orElseGet(MetaDataVO::new);
     }
 
     @Override
@@ -175,7 +183,12 @@ public class MetaDataServiceImpl implements MetaDataService {
     public List<MetaDataVO> listAllData() {
         return ListUtil.map(metaDataMapper.selectAll(), MetaDataTransfer.INSTANCE::mapToVO);
     }
-
+    
+    @Override
+    public List<MetaDataVO> listAllDataByNamespaceId(final String namespaceId) {
+        return ListUtil.map(metaDataMapper.findAllByNamespaceId(namespaceId), MetaDataTransfer.INSTANCE::mapToVO);
+    }
+    
     @Override
     public MetaDataDO findByPathAndNamespaceId(final String path, final String namespaceId) {
         return metaDataMapper.findByPathAndNamespaceId(path, namespaceId);
@@ -226,7 +239,41 @@ public class MetaDataServiceImpl implements MetaDataService {
         }
         return ConfigImportResult.success(successCount);
     }
-
+    
+    @Override
+    public ConfigImportResult importData(final String namespace, final List<MetaDataDTO> metaDataList) {
+        if (CollectionUtils.isEmpty(metaDataList)) {
+            return ConfigImportResult.success();
+        }
+        Set<String> existMetadataPathSet = Optional
+                .of(metaDataMapper.findAllByNamespaceId(namespace)
+                        .stream()
+                        .filter(Objects::nonNull)
+                        .map(MetaDataDO::getPath)
+                        .collect(Collectors.toSet()))
+                .orElseGet(Sets::newHashSet);
+        StringBuilder errorMsgBuilder = new StringBuilder();
+        int successCount = 0;
+        for (MetaDataDTO metaDataDTO : metaDataList) {
+            String metaDataPath = metaDataDTO.getPath();
+            if (existMetadataPathSet.contains(metaDataPath)) {
+                LOG.info("import metadata path: {} already exists", metaDataPath);
+                errorMsgBuilder
+                        .append(metaDataPath)
+                        .append(",");
+                continue;
+            }
+            create(metaDataDTO);
+            successCount++;
+        }
+        this.syncData();
+        if (StringUtils.isNotEmpty(errorMsgBuilder)) {
+            errorMsgBuilder.setLength(errorMsgBuilder.length() - 1);
+            return ConfigImportResult.fail(successCount, "import fail meta: " + errorMsgBuilder);
+        }
+        return ConfigImportResult.success(successCount);
+    }
+    
     private String create(final MetaDataDTO metaDataDTO) {
         Assert.isNull(metaDataMapper.pathExisted(metaDataDTO.getPath()), AdminConstants.DATA_PATH_IS_EXIST);
         MetaDataDO metaDataDO = MetaDataTransfer.INSTANCE.mapToEntity(metaDataDTO);
@@ -248,10 +295,10 @@ public class MetaDataServiceImpl implements MetaDataService {
     private String update(final MetaDataDTO metaDataDTO) {
         Assert.isNull(metaDataMapper.pathExistedExclude(metaDataDTO.getPath(), Collections.singletonList(metaDataDTO.getId())), AdminConstants.DATA_PATH_IS_EXIST);
         MetaDataDO metaDataDO = MetaDataTransfer.INSTANCE.mapToEntity(metaDataDTO);
-        Optional.ofNullable(metaDataMapper.selectByIdAndNamespaceId(metaDataDTO.getId(), metaDataDTO.getNamespaceId()))
+        Optional.ofNullable(metaDataMapper.selectById(metaDataDTO.getId()))
                 .ifPresent(e -> metaDataDTO.setEnabled(e.getEnabled()));
         metaDataDO.setPathDesc(Optional.ofNullable(metaDataDO.getPathDesc()).orElse(""));
-        final MetaDataDO before = metaDataMapper.selectByIdAndNamespaceId(metaDataDO.getId(), metaDataDTO.getNamespaceId());
+        final MetaDataDO before = metaDataMapper.selectById(metaDataDO.getId());
         if (metaDataMapper.update(metaDataDO) > 0) {
             publisher.onUpdated(metaDataDO, before);
             // update other rpc_ext for the same service

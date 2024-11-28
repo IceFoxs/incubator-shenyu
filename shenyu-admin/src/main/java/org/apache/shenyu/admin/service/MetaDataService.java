@@ -61,13 +61,12 @@ public interface MetaDataService {
     int deleteByIdsAndNamespaceId(List<String> ids, String namespaceId);
 
     /**
-     * Find meta data vo by id and namespaceId.
+     * Find meta data vo by id.
      *
      * @param id the id
-     * @param namespaceId namespaceId
      * @return the meta data vo
      */
-    MetaDataVO findByIdAndNamespaceId(String id, String namespaceId);
+    MetaDataVO findById(String id);
 
     /**
      * List by page common pager.
@@ -106,6 +105,14 @@ public interface MetaDataService {
     List<MetaDataVO> listAllData();
 
     /**
+     * List all vo list.
+     *
+     * @param namespaceId the namespaceId
+     * @return the vo list
+     */
+    List<MetaDataVO> listAllDataByNamespaceId(String namespaceId);
+
+    /**
      * Enabled by ids and namespaceId.
      *
      * @param ids     the ids
@@ -119,6 +126,13 @@ public interface MetaDataService {
      * Sync data.
      */
     void syncData();
+
+    /**
+     * Sync data by namespaceId.
+     *
+     * @param namespaceId the namespaceId
+     */
+    void syncDataByNamespaceId(String namespaceId);
 
     /**
      * find meta data by path and namespaceId.
@@ -154,4 +168,13 @@ public interface MetaDataService {
      * @return the config import result
      */
     ConfigImportResult importData(List<MetaDataDTO> metaDataList);
+
+    /**
+     * Import shenyu meta data.
+     *
+     * @param namespace     the namespace
+     * @param metaDataList meta data list
+     * @return the config import result
+     */
+    ConfigImportResult importData(String namespace, List<MetaDataDTO> metaDataList);
 }

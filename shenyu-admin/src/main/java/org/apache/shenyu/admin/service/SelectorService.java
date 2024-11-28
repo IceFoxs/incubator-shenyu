@@ -117,10 +117,9 @@ public interface SelectorService extends PageService<SelectorQueryCondition, Sel
      * find selector by id and namespaceId.
      *
      * @param id          primary key.
-     * @param namespaceId namespaceId.
      * @return {@linkplain SelectorVO}
      */
-    SelectorVO findByIdAndNamespaceId(String id, String namespaceId);
+    SelectorVO findById(String id);
 
     /**
      * find selector by name and namespaceId.
@@ -168,9 +167,10 @@ public interface SelectorService extends PageService<SelectorQueryCondition, Sel
      *
      * @param name        name
      * @param pluginNames pluginNames
+     * @param namespaceId namespaceId
      * @return selectorDO list
      */
-    List<SelectorDO> findByNameAndPluginNames(String name, List<String> pluginNames);
+    List<SelectorDO> findByNameAndPluginNamesAndNamespaceId(String name, List<String> pluginNames, String namespaceId);
 
     /**
      * Build selector data by name and namespaceId.
@@ -223,6 +223,15 @@ public interface SelectorService extends PageService<SelectorQueryCondition, Sel
      */
     List<SelectorData> listAll();
 
+
+    /**
+     * List all by namespaceId list.
+     *
+     * @param namespaceId the namespaceId
+     * @return the list
+     */
+    List<SelectorData> listAllByNamespaceId(String namespaceId);
+
     /**
      * List all export vo list.
      *
@@ -231,12 +240,29 @@ public interface SelectorService extends PageService<SelectorQueryCondition, Sel
     List<SelectorVO> listAllData();
 
     /**
+     * List all export vo list.
+     *
+     * @param namespaceId the namespaceId
+     * @return the vo list
+     */
+    List<SelectorVO> listAllDataByNamespaceId(String namespaceId);
+
+    /**
      * Import the plugin selector list.
      *
      * @param selectorList the plugin selector list
      * @return config import result
      */
     ConfigImportResult importData(List<SelectorDTO> selectorList);
+
+    /**
+     * Import the plugin selector list.
+     *
+     * @param namespace    the namespace
+     * @param selectorList the plugin selector list
+     * @return config import result
+     */
+    ConfigImportResult importData(String namespace, List<SelectorDTO> selectorList);
 
     /**
      * Enabled by ids and namespaceId.

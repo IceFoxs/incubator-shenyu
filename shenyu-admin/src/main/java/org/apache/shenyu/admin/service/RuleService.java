@@ -100,10 +100,9 @@ public interface RuleService extends PageService<RuleQueryCondition, RuleVO> {
      * find rule by id and namespaceId.
      *
      * @param id primary key.
-     * @param namespaceId namespaceId.
      * @return {@linkplain RuleVO}
      */
-    RuleVO findByIdAndNamespaceId(String id, String namespaceId);
+    RuleVO findById(String id);
 
     /**
      * find page of rule by query.
@@ -121,11 +120,27 @@ public interface RuleService extends PageService<RuleQueryCondition, RuleVO> {
     List<RuleData> listAll();
 
     /**
+     * List all list by namespaceId.
+     *
+     * @param namespaceId the namespaceId
+     * @return the list
+     */
+    List<RuleData> listAllByNamespaceId(String namespaceId);
+
+    /**
      * List all rule vo list.
      *
      * @return the rule vo list
      */
     List<RuleVO> listAllData();
+
+    /**
+     * List all rule vo list.
+     *
+     * @param namespaceId the namespaceId
+     * @return the rule vo list
+     */
+    List<RuleVO> listAllDataByNamespaceId(String namespaceId);
 
     /**
      * Find by selector id list.
@@ -162,10 +177,20 @@ public interface RuleService extends PageService<RuleQueryCondition, RuleVO> {
 
     /**
      * Import data.
+     *
      * @param ruleList rule list
      * @return config import result
      */
     ConfigImportResult importData(List<RuleDTO> ruleList);
+
+    /**
+     * Import data.
+     *
+     * @param namespace namespace
+     * @param ruleList rule list
+     * @return config import result
+     */
+    ConfigImportResult importData(String namespace, List<RuleDTO> ruleList);
 
     /**
      * Enabled string by ids and namespaceId.
