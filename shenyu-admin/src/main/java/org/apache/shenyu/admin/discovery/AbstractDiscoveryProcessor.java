@@ -45,6 +45,7 @@ import org.springframework.context.ApplicationEventPublisherAware;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.ArrayList;
@@ -107,7 +108,7 @@ public abstract class AbstractDiscoveryProcessor implements DiscoveryProcessor, 
     @Override
     public void removeDiscovery(final DiscoveryDO discoveryDO) {
         ShenyuDiscoveryService shenyuDiscoveryService = discoveryServiceCache.remove(discoveryDO.getId());
-        if (shenyuDiscoveryService == null) {
+        if (Objects.isNull(shenyuDiscoveryService)) {
             return;
         }
         if (discoveryServiceCache.values().stream().noneMatch(p -> p.equals(shenyuDiscoveryService))) {
@@ -132,6 +133,17 @@ public abstract class AbstractDiscoveryProcessor implements DiscoveryProcessor, 
                     Collections.singletonList(DiscoveryTransfer.INSTANCE.mapToData(proxySelectorDTO)));
             eventPublisher.publishEvent(dataChangedEvent);
         });
+    }
+
+    @Override
+    public void removeSelectorUpstream(final ProxySelectorDTO proxySelectorDTO) {
+        DiscoverySyncData discoverySyncData = new DiscoverySyncData();
+        discoverySyncData.setPluginName(proxySelectorDTO.getPluginName());
+        discoverySyncData.setSelectorId(proxySelectorDTO.getId());
+        discoverySyncData.setSelectorName(proxySelectorDTO.getName());
+        discoverySyncData.setNamespaceId(proxySelectorDTO.getNamespaceId());
+        DataChangedEvent dataChangedEvent = new DataChangedEvent(ConfigGroupEnum.DISCOVER_UPSTREAM, DataEventTypeEnum.DELETE, Collections.singletonList(discoverySyncData));
+        eventPublisher.publishEvent(dataChangedEvent);
     }
 
     @Override

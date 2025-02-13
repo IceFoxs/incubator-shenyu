@@ -48,7 +48,7 @@ import java.util.Objects;
 public class SpringCloudPlugin extends AbstractShenyuPlugin {
 
     private final ShenyuSpringCloudServiceChooser serviceChooser;
-    
+
     /**
      * Instantiates a new Spring cloud plugin.
      *
@@ -57,7 +57,7 @@ public class SpringCloudPlugin extends AbstractShenyuPlugin {
     public SpringCloudPlugin(final ShenyuSpringCloudServiceChooser serviceInstanceChooser) {
         this.serviceChooser = serviceInstanceChooser;
     }
-    
+
     @Override
     protected String getRawPath(final ServerWebExchange exchange) {
         return RequestUrlUtils.getRewrittenRawPath(exchange);
@@ -70,7 +70,7 @@ public class SpringCloudPlugin extends AbstractShenyuPlugin {
             return Mono.empty();
         }
         final ShenyuContext shenyuContext = exchange.getAttribute(Constants.CONTEXT);
-        assert shenyuContext != null;
+        assert Objects.nonNull(shenyuContext);
         final SpringCloudSelectorHandle springCloudSelectorHandle = SpringCloudPluginDataHandler.SELECTOR_CACHED.get().obtainHandle(selector.getId());
         final SpringCloudRuleHandle ruleHandle = buildRuleHandle(rule);
         String serviceId = springCloudSelectorHandle.getServiceId();
@@ -85,6 +85,10 @@ public class SpringCloudPlugin extends AbstractShenyuPlugin {
             return WebFluxResultUtils.result(exchange, error);
         }
         final String domain = upstream.buildDomain();
+        //if rule data has path,its realUrl.
+        if (StringUtils.isNotBlank(ruleHandle.getPath())) {
+            shenyuContext.setRealUrl(ruleHandle.getPath());
+        }
         setDomain(URI.create(domain + shenyuContext.getRealUrl()), exchange);
         //set time out.
         exchange.getAttributes().put(Constants.HTTP_TIME_OUT, ruleHandle.getTimeout());
@@ -121,7 +125,7 @@ public class SpringCloudPlugin extends AbstractShenyuPlugin {
     protected Mono<Void> handleRuleIfNull(final String pluginName, final ServerWebExchange exchange, final ShenyuPluginChain chain) {
         return WebFluxResultUtils.noRuleResult(pluginName, exchange);
     }
-    
+
     private SpringCloudRuleHandle buildRuleHandle(final RuleData rule) {
         return SpringCloudPluginDataHandler.RULE_CACHED.get().obtainHandle(CacheKeyUtils.INST.getKey(rule));
     }

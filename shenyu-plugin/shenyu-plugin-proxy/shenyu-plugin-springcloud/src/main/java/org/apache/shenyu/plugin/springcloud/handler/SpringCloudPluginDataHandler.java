@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Supplier;
@@ -57,9 +58,9 @@ import java.util.stream.Collectors;
  * The type spring cloud plugin data handler.
  */
 public class SpringCloudPluginDataHandler implements PluginDataHandler {
-    
+
     public static final Supplier<CommonHandleCache<String, SpringCloudSelectorHandle>> SELECTOR_CACHED = new BeanHolder<>(CommonHandleCache::new);
-    
+
     public static final Supplier<CommonHandleCache<String, SpringCloudRuleHandle>> RULE_CACHED = new BeanHolder<>(CommonHandleCache::new);
 
     private static ShenyuInstanceRegisterRepository repository;
@@ -69,7 +70,7 @@ public class SpringCloudPluginDataHandler implements PluginDataHandler {
     private final ShenyuConfig.SpringCloudCacheConfig springCloudCacheConfig;
 
     private final Environment env;
-    
+
     public SpringCloudPluginDataHandler(final ShenyuConfig.SpringCloudCacheConfig springCloudCacheConfig, final Environment env) {
         this.springCloudCacheConfig = springCloudCacheConfig;
         this.env = env;
@@ -88,9 +89,9 @@ public class SpringCloudPluginDataHandler implements PluginDataHandler {
         // get old pluginData
         PluginData oldPluginData = BaseDataCache.getInstance().obtainPluginData(pluginData.getName());
         String newConfig = pluginData.getConfig();
-        String oldConfig = oldPluginData != null ? oldPluginData.getConfig() : "";
+        String oldConfig = Objects.nonNull(oldPluginData) ? oldPluginData.getConfig() : "";
         RegisterConfig newRegisterConfig = GsonUtils.getInstance().fromJson(newConfig, RegisterConfig.class);
-        if (newRegisterConfig == null) {
+        if (Objects.isNull(newRegisterConfig)) {
             return;
         }
         RegisterConfig oldRegisterConfig = null;
@@ -99,13 +100,13 @@ public class SpringCloudPluginDataHandler implements PluginDataHandler {
         }
 
         // refresh config
-        if (repository == null) {
+        if (Objects.isNull(repository)) {
             LOG.info("springCloud handlerPlugin repository is null");
             repository = ShenyuInstanceRegisterRepositoryFactory.reNewAndInitInstance(newRegisterConfig);
         } else if (!newRegisterConfig.equals(oldRegisterConfig)) {
             LOG.info("springCloud handlerPlugin repository occur update");
             // the config has been updated
-            if (repository != null) {
+            if (Objects.nonNull(repository)) {
                 repository.close();
             }
             repository = ShenyuInstanceRegisterRepositoryFactory.reNewAndInitInstance(newRegisterConfig);
@@ -193,10 +194,18 @@ public class SpringCloudPluginDataHandler implements PluginDataHandler {
             final String prefix = "spring.cloud.nacos.discovery.";
             Properties properties = new Properties();
             properties.put(PropertyKeyConst.NAMESPACE, env.getProperty(prefix + PropertyKeyConst.NAMESPACE));
-            properties.put(PropertyKeyConst.USERNAME, env.getProperty(prefix + PropertyKeyConst.USERNAME));
-            properties.put(PropertyKeyConst.PASSWORD, env.getProperty(prefix + PropertyKeyConst.PASSWORD));
-            properties.put(PropertyKeyConst.ACCESS_KEY, env.getProperty(prefix + PropertyKeyConst.ACCESS_KEY));
-            properties.put(PropertyKeyConst.SECRET_KEY, env.getProperty(prefix + PropertyKeyConst.SECRET_KEY));
+            if (Objects.nonNull(env.getProperty(prefix + PropertyKeyConst.USERNAME))) {
+                properties.put(PropertyKeyConst.USERNAME, env.getProperty(prefix + PropertyKeyConst.USERNAME));
+            }
+            if (Objects.nonNull(env.getProperty(prefix + PropertyKeyConst.PASSWORD))) {
+                properties.put(PropertyKeyConst.PASSWORD, env.getProperty(prefix + PropertyKeyConst.PASSWORD));
+            }
+            if (Objects.nonNull(env.getProperty(prefix + PropertyKeyConst.ACCESS_KEY))) {
+                properties.put(PropertyKeyConst.ACCESS_KEY, env.getProperty(prefix + PropertyKeyConst.ACCESS_KEY));
+            }
+            if (Objects.nonNull(env.getProperty(prefix + PropertyKeyConst.SECRET_KEY))) {
+                properties.put(PropertyKeyConst.SECRET_KEY, env.getProperty(prefix + PropertyKeyConst.SECRET_KEY));
+            }
             RegisterConfig registerConfig = RegisterConfig.Builder.builder()
                     .enabled(true)
                     .registerType("nacos")
